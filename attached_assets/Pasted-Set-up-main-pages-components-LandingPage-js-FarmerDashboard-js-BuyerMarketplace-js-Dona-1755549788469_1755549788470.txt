@@ -1,0 +1,61 @@
+Set up main pages/components:
+	•	LandingPage.js
+	•	FarmerDashboard.js
+	•	BuyerMarketplace.js
+	•	DonationPanel.js
+	3.	Install any needed dependencies:
+	•	npm install firebase react-router-dom (for routing and database integration)
+
+Firebase
+	1.	Create a Firebase project.
+	2.	Enable Authentication (email/password login for farmers and buyers).
+	3.	Set up Realtime Database with these main collections:
+	•	farmers → {name, location, crops[]}
+	•	buyers → {name, location}
+	•	crops → {cropName, quantity, price, farmerId, donationFlag}
+	•	donations → {cropId, status, community}
+
+Extra Setup
+	•	Add OpenWeather API key for later integration.
+
+⸻
+
+Step 2: Landing Page (Day 3)
+	•	Display Rooted logo and tagline.
+	•	Intro text: “Empowering Small-Scale Farmers.”
+	•	Buttons for Login as Farmer and Login as Buyer.
+	•	Footer with links (About, Contact, Terms).
+
+Tip: Use placeholder buttons and links; functionality can be added later.
+
+⸻
+
+Step 3: Farmer Dashboard MVP (Day 4)
+	1.	Add Crop Form
+	•	Input fields: crop name, quantity, price, harvest date
+	•	Submit → save to Firebase under crops linked to farmerId
+	2.	View Schedule
+	•	Display crops in calendar view or list view showing planting and harvest dates
+	3.	Flag for Donation
+	•	Checkbox or toggle next to each crop → updates donationFlag in Firebase
+	4.	Sidebar (optional)
+	•	Display weather widget (initially placeholder, later fetch from OpenWeather API)
+
+⸻
+
+Step 4: Buyer Marketplace MVP (Day 4)
+	1.	Crop Listings
+	•	Fetch crops from Firebase where donationFlag = false
+	•	Display in card format: crop name, quantity, price, farmer location
+	2.	Contact Seller Button
+	•	Initially can open email link or modal with farmer contact info
+	3.	Search / Filter (optional)
+	•	Filter by crop type, location, or price range
+
+⸻
+
+Step 5: Donation Panel MVP (Day 4)
+	1.	Fetch crops where donationFlag = true
+	2.	Display crop name, quantity, farmer, location
+	3.	Manage requests: accept/decline (update donation status in Firebase)
+	4.	Impact Summary (optional): total donated, communities reached
