@@ -9,7 +9,9 @@ import LoginModal from "@/components/auth/login-modal";
 export default function Header() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginType, setLoginType] = useState<'farmer' | 'buyer'>('farmer');
-  const { currentUser, userProfile, logout } = useAuth();
+  
+  // Get auth data
+  const { currentUser, userProfile, logout, loading } = useAuth();
 
   const handleFarmerLogin = () => {
     setLoginType('farmer');

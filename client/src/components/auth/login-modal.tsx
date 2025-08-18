@@ -37,19 +37,28 @@ export default function LoginModal({ isOpen, onClose, userType }: LoginModalProp
     setIsLoading(true);
 
     try {
+      console.log('Starting authentication for:', { email, userType, isSignUp });
+      
       if (isSignUp) {
         // Create Firebase user first
+        console.log('Creating Firebase user...');
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const firebaseUser = userCredential.user;
+        console.log('Firebase user created:', firebaseUser.uid);
         
         // Then create user record in our database
-        await createUserMutation.mutateAsync({
+        console.log('Creating user record in database...');
+        const userData = {
           email: firebaseUser.email,
-          password, // In production, this should be handled securely
+          password: password, // Include password for backend validation
           name,
-          location,
+          location: location || null,
           userType,
-        });
+        };
+        console.log('User data to save:', userData);
+        
+        await createUserMutation.mutateAsync(userData);
+        console.log('User record created successfully');
 
         toast({
           title: "Account created successfully!",
@@ -57,7 +66,9 @@ export default function LoginModal({ isOpen, onClose, userType }: LoginModalProp
         });
       } else {
         // Sign in existing user
+        console.log('Signing in existing user...');
         await signInWithEmailAndPassword(auth, email, password);
+        console.log('User signed in successfully');
         
         toast({
           title: "Logged in successfully!",
@@ -76,6 +87,7 @@ export default function LoginModal({ isOpen, onClose, userType }: LoginModalProp
       
       onClose();
     } catch (error: any) {
+      console.error('Authentication error:', error);
       let errorMessage = "Please check your credentials and try again.";
       
       if (error.code === 'auth/email-already-in-use') {
@@ -86,6 +98,10 @@ export default function LoginModal({ isOpen, onClose, userType }: LoginModalProp
         errorMessage = "No account found with this email.";
       } else if (error.code === 'auth/wrong-password') {
         errorMessage = "Incorrect password.";
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = "Please enter a valid email address.";
+      } else if (error.message) {
+        errorMessage = error.message;
       }
       
       toast({
