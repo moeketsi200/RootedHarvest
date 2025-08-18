@@ -130,6 +130,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Weather route
+  app.get("/api/weather", async (req, res) => {
+    try {
+      const location = req.query.location as string || "San Francisco";
+      const apiKey = process.env.OPENWEATHER_API_KEY;
+      
+      if (!apiKey) {
+        return res.status(500).json({ message: "Weather service not configured" });
+      }
+
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(location)}&appid=${apiKey}&units=metric`
+      );
+
+      if (!response.ok) {
+        throw new Error('Weather API request failed');
+      }
+
+      const weatherData = await response.json();
+      res.json(weatherData);
+    } catch (error) {
+      console.error('Weather API error:', error);
+      res.status(500).json({ message: "Failed to fetch weather data" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

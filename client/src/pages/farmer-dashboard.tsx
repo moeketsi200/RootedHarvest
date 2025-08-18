@@ -1,11 +1,16 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { User, Calendar, DollarSign, Heart, Sprout } from "lucide-react";
+import { User, Calendar, DollarSign, Heart, Sprout, TrendingUp, BarChart3 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import AddCropForm from "@/components/farmer/add-crop-form";
 import CropList from "@/components/farmer/crop-list";
+import WeatherWidget from "@/components/farmer/weather-widget";
+import PlatformStats from "@/components/analytics/platform-stats";
 
 export default function FarmerDashboard() {
   const { userProfile, currentUser } = useAuth();
+  const [activeTab, setActiveTab] = useState<'crops' | 'analytics'>('crops');
   
   // If no authenticated user or not a farmer, show access denied
   if (!currentUser || !userProfile || userProfile.userType !== 'farmer') {
@@ -100,11 +105,51 @@ export default function FarmerDashboard() {
           </Card>
         </div>
 
-        {/* Crop Management Section */}
-        <div className="grid lg:grid-cols-2 gap-8">
-          <AddCropForm farmerId={farmer.id} />
-          <CropList farmerId={farmer.id} />
+        {/* Tab Navigation */}
+        <div className="flex space-x-1 mb-8 bg-white rounded-lg p-1 shadow-sm border">
+          <Button
+            variant={activeTab === 'crops' ? 'default' : 'ghost'}
+            onClick={() => setActiveTab('crops')}
+            className="flex items-center space-x-2"
+          >
+            <Sprout className="h-4 w-4" />
+            <span>Crop Management</span>
+          </Button>
+          <Button
+            variant={activeTab === 'analytics' ? 'default' : 'ghost'}
+            onClick={() => setActiveTab('analytics')}
+            className="flex items-center space-x-2"
+          >
+            <BarChart3 className="h-4 w-4" />
+            <span>Platform Analytics</span>
+          </Button>
         </div>
+
+        {/* Tab Content */}
+        {activeTab === 'crops' ? (
+          /* Weather and Crop Management Section */
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Weather Widget */}
+          <div className="lg:col-span-1">
+            <WeatherWidget location={farmer.location} />
+          </div>
+          
+          {/* Crop Management Section */}
+          <div className="lg:col-span-2">
+            <AddCropForm farmerId={farmer.id} />
+            <CropList farmerId={farmer.id} />
+          </div>
+        </div>
+        ) : (
+          /* Platform Analytics Section */
+          <div className="space-y-6">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Platform Analytics</h2>
+              <p className="text-gray-600">Track the impact and growth of the ROOTED community</p>
+            </div>
+            <PlatformStats />
+          </div>
+        )}
       </div>
     </div>
   );

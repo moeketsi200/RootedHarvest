@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { Link } from "wouter";
 import LoginModal from "@/components/auth/login-modal";
+import NotificationBell from "@/components/notifications/notification-bell";
 
 export default function Header() {
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -64,6 +65,7 @@ export default function Header() {
                       </Link>
                     )}
                   </nav>
+                  <NotificationBell />
                   <span className="text-sm text-gray-600 hidden sm:inline">
                     Welcome, {userProfile.name}
                   </span>

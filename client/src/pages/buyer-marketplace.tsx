@@ -4,9 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Search, Filter } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import CropCard from "@/components/buyer/crop-card";
+import SearchFilters, { MarketplaceFilters } from "@/components/marketplace/search-filters";
 
 export default function BuyerMarketplace() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState<MarketplaceFilters>({
+    searchTerm: "",
+    cropType: "",
+    location: "",
+    priceRange: [0, 100],
+    harvestDateRange: "all",
+    sortBy: "newest"
+  });
 
   const { data: crops, isLoading } = useQuery({
     queryKey: ["/api/crops/marketplace"],
@@ -75,6 +84,9 @@ export default function BuyerMarketplace() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Advanced Search Filters */}
+        <SearchFilters onFiltersChange={setFilters} />
+        
         {isLoading ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
