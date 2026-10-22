@@ -1,4 +1,4 @@
-import { Sprout, ShoppingCart, LogOut, User } from "lucide-react";
+import { Sprout, ShoppingCart, LogOut, User, AlertTriangle, ShieldCheck } from "lucide-react";
 import rootedLogo from "@assets/0E49E1FA-15E2-4BCA-8F70-FFFA26020759_1755549797327.png";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -29,7 +29,7 @@ export default function Header() {
       <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
+            <Link href="/" className="flex items-center space-x-3 cursor-pointer">
               <img 
                 src={rootedLogo} 
                 alt="ROOTED Logo" 
@@ -39,19 +39,19 @@ export default function Header() {
                 <h1 className="text-2xl font-bold text-rooted-primary">ROOTED</h1>
                 <p className="text-xs text-rooted-muted -mt-1">Empowering Small-Scale Farmers</p>
               </div>
-            </div>
+            </Link>
 
             <nav className="hidden md:flex items-center space-x-8">
-              <a href="#about" className="text-gray-600 hover:text-rooted-primary transition-colors">About</a>
-              <a href="#features" className="text-gray-600 hover:text-rooted-primary transition-colors">Features</a>
-              <a href="#contact" className="text-gray-600 hover:text-rooted-primary transition-colors">Contact</a>
+              <Link href="/" className="text-gray-600 hover:text-rooted-primary transition-colors font-medium">Home</Link>
+              <Link href="/buyer-marketplace" className="text-gray-600 hover:text-rooted-primary transition-colors font-medium">Marketplace</Link>
+              <Link href="/donation-panel" className="text-gray-600 hover:text-rooted-primary transition-colors font-medium">Donations</Link>
             </nav>
 
             <div className="flex items-center space-x-3">
               {currentUser && userProfile ? (
                 <>
-                  <nav className="hidden md:flex items-center space-x-4 mr-4">
-                    <Link href={userProfile.userType === 'farmer' ? '/farmer-dashboard' : '/buyer-marketplace'}>
+                  <nav className="hidden md:flex items-center space-x-4 mr-2">
+                    <Link href={!userProfile.emailVerified ? '/verify-email' : (userProfile.userType === 'farmer' ? '/farmer-dashboard' : '/buyer-marketplace')}>
                       <Button variant="ghost" className="text-gray-600 hover:text-rooted-primary">
                         <User className="mr-2 h-4 w-4" />
                         Dashboard
@@ -65,6 +65,15 @@ export default function Header() {
                       </Link>
                     )}
                   </nav>
+
+                  {!userProfile.emailVerified && (
+                    <Link href="/verify-email">
+                      <span className="inline-flex items-center gap-1 text-xs bg-amber-100 text-amber-900 font-semibold px-2.5 py-1 rounded-full border border-amber-300 hover:bg-amber-200 transition-colors cursor-pointer animate-pulse">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                        Verify Email
+                      </span>
+                    </Link>
+                  )}
                   <NotificationBell />
                   <span className="text-sm text-gray-600 hidden sm:inline">
                     Welcome, {userProfile.name}

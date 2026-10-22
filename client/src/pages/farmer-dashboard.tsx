@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { User, Calendar, DollarSign, Heart, Sprout, TrendingUp, BarChart3 } from "lucide-react";
+import { User, Calendar, DollarSign, Heart, Sprout, BarChart3 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,10 @@ import AddCropForm from "@/components/farmer/add-crop-form";
 import CropList from "@/components/farmer/crop-list";
 import WeatherWidget from "@/components/farmer/weather-widget";
 import PlatformStats from "@/components/analytics/platform-stats";
+import { useQuery } from "@tanstack/react-query";
+
+import Header from "@/components/layout/header";
+import VerifyEmailCard from "@/components/auth/verify-email-card";
 
 export default function FarmerDashboard() {
   const { userProfile, currentUser } = useAuth();
@@ -18,7 +22,19 @@ export default function FarmerDashboard() {
       <div className="min-h-screen bg-rooted-bg flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
-          <p className="text-gray-600">This page is only accessible to farmers.</p>
+          <p className="text-gray-600">This page is only accessible to registered farmers.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If farmer has not verified their email, lock dashboard and enforce verification
+  if (!userProfile.emailVerified) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col">
+        <Header />
+        <div className="flex-1 flex flex-col items-center justify-center p-4">
+          <VerifyEmailCard />
         </div>
       </div>
     );
@@ -29,6 +45,45 @@ export default function FarmerDashboard() {
     name: userProfile.name,
     location: userProfile.location || "Location not specified",
   };
+
+  // Fetch farmer crops from SQLite to dynamically calculate stats
+  const { data: crops = [] } = useQuery<any[]>({
+    queryKey: ["/api/crops", farmer.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/crops/${farmer.id}`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+  });
+
+  // Calculate live statistics
+  const activeCrops = crops.filter((c) => c.status === "available");
+  const activeCount = activeCrops.length;
+
+  const now = new Date();
+  const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const thisWeekCount = crops.filter((c) => {
+    try {
+      const d = new Date(c.harvestDate);
+      return d >= now && d <= nextWeek;
+    } catch {
+      return false;
+    }
+  }).length;
+
+  // Calculate real total inventory/sales value: sum of (quantity * price)
+  const totalValue = activeCrops
+    .filter((c) => !c.donationFlag)
+    .reduce((sum, c) => {
+      const q = Number(c.quantity) || 0;
+      const p = parseFloat(c.price || "0") || 0;
+      return sum + q * p;
+    }, 0);
+
+  // Calculate real donated pounds
+  const donatedLbs = crops
+    .filter((c) => c.donationFlag || c.status === "donated")
+    .reduce((sum, c) => sum + (Number(c.quantity) || 0), 0);
 
   return (
     <div className="min-h-screen bg-rooted-bg">
@@ -47,57 +102,59 @@ export default function FarmerDashboard() {
             </div>
             <div className="text-right">
               <p className="text-sm text-rooted-accent">Current Season</p>
-              <p className="font-semibold">Fall 2024</p>
+              <p className="font-semibold">Spring Season</p>
             </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
+        {/* Dynamic Stats Cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-green-50 border-green-200">
+          <Card className="bg-green-50 border-green-200 shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-3xl font-bold text-rooted-primary">12</p>
-                  <p className="text-gray-600">Active Crops</p>
+                  <p className="text-3xl font-bold text-rooted-primary">{activeCount}</p>
+                  <p className="text-gray-600 text-sm">Active Crops</p>
                 </div>
                 <Sprout className="text-rooted-primary text-2xl" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-blue-50 border-blue-200">
+          <Card className="bg-blue-50 border-blue-200 shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-3xl font-bold text-blue-600">3</p>
-                  <p className="text-gray-600">This Week</p>
+                  <p className="text-3xl font-bold text-blue-600">{thisWeekCount}</p>
+                  <p className="text-gray-600 text-sm">Harvest This Week</p>
                 </div>
                 <Calendar className="text-blue-600 text-2xl" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-yellow-50 border-yellow-200">
+          <Card className="bg-yellow-50 border-yellow-200 shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-3xl font-bold text-yellow-600">$2,400</p>
-                  <p className="text-gray-600">This Month</p>
+                  <p className="text-3xl font-bold text-yellow-600">
+                    R{totalValue.toLocaleString("en-ZA", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                  </p>
+                  <p className="text-gray-600 text-sm">Inventory Value</p>
                 </div>
                 <DollarSign className="text-yellow-600 text-2xl" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-purple-50 border-purple-200">
+          <Card className="bg-purple-50 border-purple-200 shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-3xl font-bold text-purple-600">156</p>
-                  <p className="text-gray-600">lbs Donated</p>
+                  <p className="text-3xl font-bold text-purple-600">{donatedLbs.toLocaleString()}</p>
+                  <p className="text-gray-600 text-sm">kg Donated</p>
                 </div>
                 <Heart className="text-purple-600 text-2xl" />
               </div>
@@ -128,18 +185,18 @@ export default function FarmerDashboard() {
         {/* Tab Content */}
         {activeTab === 'crops' ? (
           /* Weather and Crop Management Section */
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Weather Widget */}
-          <div className="lg:col-span-1">
-            <WeatherWidget location={farmer.location} />
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Weather Widget */}
+            <div className="lg:col-span-1">
+              <WeatherWidget location={farmer.location} />
+            </div>
+            
+            {/* Crop Management Section */}
+            <div className="lg:col-span-2">
+              <AddCropForm farmerId={farmer.id} />
+              <CropList farmerId={farmer.id} />
+            </div>
           </div>
-          
-          {/* Crop Management Section */}
-          <div className="lg:col-span-2">
-            <AddCropForm farmerId={farmer.id} />
-            <CropList farmerId={farmer.id} />
-          </div>
-        </div>
         ) : (
           /* Platform Analytics Section */
           <div className="space-y-6">

@@ -1,10 +1,30 @@
 import express, { type Request, Response, NextFunction } from "express";
+import session from "express-session";
+import createMemoryStore from "memorystore";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import "./db"; // Ensure SQLite DB and tables are initialized and seeded
+
+const MemoryStore = createMemoryStore(session);
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "rooted-harvest-local-secret-2024",
+    resave: false,
+    saveUninitialized: false,
+    store: new MemoryStore({
+      checkPeriod: 86400000, // prune expired entries every 24h
+    }),
+    cookie: {
+      secure: false, // development localhost
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    },
+  })
+);
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -58,8 +78,6 @@ app.use((req, res, next) => {
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
   server.listen({
     port,

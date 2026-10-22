@@ -62,7 +62,7 @@ export default function DonationRequest({ donation }: DonationRequestProps) {
             <div>
               <h5 className="font-semibold text-gray-900">{donation.cropName}</h5>
               <p className="text-gray-600">
-                {donation.quantity} lbs • {donation.farmerName} • {donation.location}
+                {donation.quantity} kg • {donation.farmerName} • {donation.location}
               </p>
               <p className="text-sm text-gray-500">
                 Requested by {donation.communityName}

@@ -6,6 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import CropCard from "@/components/buyer/crop-card";
 import SearchFilters, { MarketplaceFilters } from "@/components/marketplace/search-filters";
 
+import Header from "@/components/layout/header";
+
 export default function BuyerMarketplace() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<MarketplaceFilters>({
@@ -26,27 +28,27 @@ export default function BuyerMarketplace() {
       id: "1",
       cropName: "Organic Tomatoes",
       quantity: 500,
-      price: "3.50",
-      farmerName: "Thompson Farm",
-      location: "Green Valley, CA",
+      price: "24.50",
+      farmerName: "Paarl Heritage Farm",
+      location: "Paarl, Western Cape",
       status: "available"
     },
     {
       id: "2",
       cropName: "Bell Peppers Mix",
       quantity: 200,
-      price: "4.00",
-      farmerName: "Sunrise Farms",
-      location: "Valley Springs, CA",
+      price: "32.00",
+      farmerName: "Sunrise Agro",
+      location: "Tzaneen, Limpopo",
       status: "available"
     },
     {
       id: "3",
       cropName: "Mixed Greens",
       quantity: 75,
-      price: "5.25",
-      farmerName: "Greenleaf Organic",
-      location: "Coastal Hills, CA",
+      price: "38.50",
+      farmerName: "Midlands Organic",
+      location: "Howick, KwaZulu-Natal",
       status: "low_stock"
     }
   ];
@@ -55,8 +57,9 @@ export default function BuyerMarketplace() {
 
   return (
     <div className="min-h-screen bg-rooted-bg">
+      <Header />
       {/* Header */}
-      <div className="bg-blue-600 text-white">
+      <div className="bg-emerald-800 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>

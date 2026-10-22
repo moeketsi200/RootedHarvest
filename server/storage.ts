@@ -1,4 +1,16 @@
-import { type User, type InsertUser, type Crop, type InsertCrop, type Donation, type InsertDonation } from "@shared/schema";
+import { 
+  type User, 
+  type InsertUser, 
+  type Crop, 
+  type InsertCrop, 
+  type Donation, 
+  type InsertDonation,
+  users,
+  crops,
+  donations
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -6,6 +18,9 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  verifyUserEmail(userId: string): Promise<User>;
+  setUserVerificationCode(userId: string, code: string): Promise<User>;
+  toggleUserVerification(userId: string): Promise<User>;
   
   // Crop methods
   getCrop(id: string): Promise<Crop | undefined>;
@@ -21,107 +36,128 @@ export interface IStorage {
   updateDonation(id: string, updates: Partial<Donation>): Promise<Donation | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private crops: Map<string, Crop>;
-  private donations: Map<string, Donation>;
-
-  constructor() {
-    this.users = new Map();
-    this.crops = new Map();
-    this.donations = new Map();
-  }
-
-  // User methods
+export class SqliteStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const result = db.select().from(users).where(eq(users.id, id)).get();
+    return result;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.email === email);
+    const result = db.select().from(users).where(eq(users.email, email)).get();
+    return result;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { 
-      ...insertUser, 
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const newUser = {
+      ...insertUser,
       id,
       location: insertUser.location || null,
-      createdAt: new Date()
+      emailVerified: false,
+      verificationCode,
     };
-    this.users.set(id, user);
-    return user;
+    db.insert(users).values(newUser).run();
+    const created = db.select().from(users).where(eq(users.id, id)).get();
+    if (!created) {
+      throw new Error("Failed to create user");
+    }
+    return created;
+  }
+
+  async verifyUserEmail(userId: string): Promise<User> {
+    db.update(users).set({ emailVerified: true }).where(eq(users.id, userId)).run();
+    const updated = db.select().from(users).where(eq(users.id, userId)).get();
+    if (!updated) {
+      throw new Error("User not found");
+    }
+    return updated;
+  }
+
+  async setUserVerificationCode(userId: string, code: string): Promise<User> {
+    db.update(users).set({ verificationCode: code }).where(eq(users.id, userId)).run();
+    const updated = db.select().from(users).where(eq(users.id, userId)).get();
+    if (!updated) {
+      throw new Error("User not found");
+    }
+    return updated;
+  }
+
+  async toggleUserVerification(userId: string): Promise<User> {
+    const current = await this.getUser(userId);
+    if (!current) throw new Error("User not found");
+    const newStatus = !current.emailVerified;
+    db.update(users).set({ emailVerified: newStatus }).where(eq(users.id, userId)).run();
+    return (await this.getUser(userId))!;
   }
 
   // Crop methods
   async getCrop(id: string): Promise<Crop | undefined> {
-    return this.crops.get(id);
+    const result = db.select().from(crops).where(eq(crops.id, id)).get();
+    return result;
   }
 
   async getCropsByFarmer(farmerId: string): Promise<Crop[]> {
-    return Array.from(this.crops.values()).filter(crop => crop.farmerId === farmerId);
+    return db.select().from(crops).where(eq(crops.farmerId, farmerId)).all();
   }
 
   async getMarketplaceCrops(): Promise<Crop[]> {
-    return Array.from(this.crops.values()).filter(crop => !crop.donationFlag && crop.status === 'available');
+    return db
+      .select()
+      .from(crops)
+      .where(and(eq(crops.donationFlag, false), eq(crops.status, "available")))
+      .all();
   }
 
   async createCrop(insertCrop: InsertCrop): Promise<Crop> {
     const id = randomUUID();
-    const crop: Crop = {
+    const newCrop = {
       ...insertCrop,
       id,
-      status: 'available',
+      status: "available",
       donationFlag: insertCrop.donationFlag || false,
-      createdAt: new Date()
     };
-    this.crops.set(id, crop);
-    return crop;
+    db.insert(crops).values(newCrop).run();
+    const created = db.select().from(crops).where(eq(crops.id, id)).get();
+    if (!created) {
+      throw new Error("Failed to create crop");
+    }
+    return created;
   }
 
   async updateCrop(id: string, updates: Partial<Crop>): Promise<Crop | undefined> {
-    const crop = this.crops.get(id);
-    if (!crop) return undefined;
-    
-    const updatedCrop = { ...crop, ...updates };
-    this.crops.set(id, updatedCrop);
-    return updatedCrop;
+    db.update(crops).set(updates).where(eq(crops.id, id)).run();
+    return db.select().from(crops).where(eq(crops.id, id)).get();
   }
 
   // Donation methods
   async getDonation(id: string): Promise<Donation | undefined> {
-    return this.donations.get(id);
+    return db.select().from(donations).where(eq(donations.id, id)).get();
   }
 
   async getDonationRequests(): Promise<Donation[]> {
-    return Array.from(this.donations.values()).filter(donation => donation.status === 'pending');
+    return db.select().from(donations).all();
   }
 
   async createDonation(insertDonation: InsertDonation): Promise<Donation> {
     const id = randomUUID();
-    const donation: Donation = {
+    const newDonation = {
       ...insertDonation,
       id,
-      status: 'pending',
-      requestedAt: new Date(),
-      updatedAt: new Date()
+      status: "pending",
     };
-    this.donations.set(id, donation);
-    return donation;
+    db.insert(donations).values(newDonation).run();
+    const created = db.select().from(donations).where(eq(donations.id, id)).get();
+    if (!created) {
+      throw new Error("Failed to create donation");
+    }
+    return created;
   }
 
   async updateDonation(id: string, updates: Partial<Donation>): Promise<Donation | undefined> {
-    const donation = this.donations.get(id);
-    if (!donation) return undefined;
-    
-    const updatedDonation = { 
-      ...donation, 
-      ...updates, 
-      updatedAt: new Date() 
-    };
-    this.donations.set(id, updatedDonation);
-    return updatedDonation;
+    db.update(donations).set(updates).where(eq(donations.id, id)).run();
+    return db.select().from(donations).where(eq(donations.id, id)).get();
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new SqliteStorage();

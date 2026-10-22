@@ -1,10 +1,41 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/layout/header";
-import { Sprout, Store, Heart, Users, Handshake, Tractor, ShoppingBasket } from "lucide-react";
+import { Sprout, Store, Heart, Users, Handshake, Tractor, ShoppingBasket, ArrowRight } from "lucide-react";
 import rootedLogo from "@assets/0E49E1FA-15E2-4BCA-8F70-FFFA26020759_1755549797327.png";
+import { Link, useLocation } from "wouter";
+import { useState } from "react";
+import { useAuth } from "@/contexts/auth-context";
+import LoginModal from "@/components/auth/login-modal";
+import LegalSupportModal, { LegalTab } from "@/components/legal/legal-support-modal";
 
 export default function LandingPage() {
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginType, setLoginType] = useState<'farmer' | 'buyer'>('farmer');
+  const [supportModalOpen, setSupportModalOpen] = useState(false);
+  const [supportTab, setSupportTab] = useState<LegalTab>("help");
+  const { currentUser, userProfile } = useAuth();
+  const [, setLocation] = useLocation();
+
+  const handleOpenSupport = (tab: LegalTab) => {
+    setSupportTab(tab);
+    setSupportModalOpen(true);
+  };
+
+  const handleStartAsFarmer = () => {
+    if (currentUser && userProfile?.userType === 'farmer') {
+      setLocation('/farmer-dashboard');
+    } else {
+      setLoginType('farmer');
+      setShowLoginModal(true);
+    }
+  };
+
+  const handleOpenAuth = (type: 'farmer' | 'buyer') => {
+    setLoginType(type);
+    setShowLoginModal(true);
+  };
+
   return (
     <div className="font-inter bg-rooted-bg text-gray-900 min-h-screen">
       <Header />
@@ -23,18 +54,24 @@ export default function LandingPage() {
                 Connect farmers directly with buyers, manage crop schedules, and support communities through our donation platform. Building sustainable agricultural networks one harvest at a time.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="bg-rooted-primary text-white hover:bg-rooted-secondary font-semibold text-lg shadow-lg">
+                <Button 
+                  size="lg" 
+                  onClick={handleStartAsFarmer}
+                  className="bg-rooted-primary text-white hover:bg-rooted-secondary font-semibold text-lg shadow-lg cursor-pointer"
+                >
                   <Sprout className="mr-3 h-5 w-5" />
                   Start as Farmer
                 </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="border-2 border-rooted-primary text-rooted-primary hover:bg-rooted-primary hover:text-white font-semibold text-lg"
-                >
-                  <Store className="mr-3 h-5 w-5" />
-                  Browse Marketplace
-                </Button>
+                <Link href="/buyer-marketplace">
+                  <Button 
+                    size="lg" 
+                    variant="outline" 
+                    className="w-full sm:w-auto border-2 border-rooted-primary text-rooted-primary hover:bg-rooted-primary hover:text-white font-semibold text-lg cursor-pointer"
+                  >
+                    <Store className="mr-3 h-5 w-5" />
+                    Browse Marketplace
+                  </Button>
+                </Link>
               </div>
             </div>
             <div className="relative">
@@ -83,14 +120,14 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="bg-gradient-to-br from-green-50 to-rooted-bg border border-gray-200 hover:shadow-lg transition-shadow">
+            <Card className="bg-gradient-to-br from-green-50 to-rooted-bg border border-gray-200 hover:shadow-lg transition-shadow flex flex-col justify-between">
               <CardContent className="p-8">
                 <div className="w-12 h-12 bg-rooted-primary rounded-xl flex items-center justify-center mb-6">
                   <Sprout className="text-white text-xl" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Farmer Dashboard</h3>
                 <p className="text-gray-600 mb-4">Manage your crops, track harvest schedules, and monitor your agricultural calendar with our intuitive dashboard.</p>
-                <ul className="space-y-2 text-sm text-gray-600">
+                <ul className="space-y-2 text-sm text-gray-600 mb-6">
                   <li className="flex items-center">
                     <div className="w-2 h-2 bg-rooted-primary rounded-full mr-2"></div>
                     Crop management system
@@ -104,17 +141,24 @@ export default function LandingPage() {
                     Weather integration
                   </li>
                 </ul>
+                <Button 
+                  onClick={handleStartAsFarmer}
+                  variant="ghost" 
+                  className="text-rooted-primary hover:text-rooted-secondary p-0 font-medium flex items-center"
+                >
+                  Enter Dashboard <ArrowRight className="ml-1.5 h-4 w-4" />
+                </Button>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-gray-200 hover:shadow-lg transition-shadow">
+            <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-gray-200 hover:shadow-lg transition-shadow flex flex-col justify-between">
               <CardContent className="p-8">
                 <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mb-6">
                   <Store className="text-white text-xl" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Buyer Marketplace</h3>
                 <p className="text-gray-600 mb-4">Discover fresh, local produce directly from farmers. Search, filter, and connect with sellers in your area.</p>
-                <ul className="space-y-2 text-sm text-gray-600">
+                <ul className="space-y-2 text-sm text-gray-600 mb-6">
                   <li className="flex items-center">
                     <div className="w-2 h-2 bg-blue-600 rounded-full mr-2"></div>
                     Direct farmer connection
@@ -128,17 +172,25 @@ export default function LandingPage() {
                     Real-time availability
                   </li>
                 </ul>
+                <Link href="/buyer-marketplace">
+                  <Button 
+                    variant="ghost" 
+                    className="text-blue-600 hover:text-blue-700 p-0 font-medium flex items-center"
+                  >
+                    Explore Marketplace <ArrowRight className="ml-1.5 h-4 w-4" />
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border border-gray-200 hover:shadow-lg transition-shadow">
+            <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border border-gray-200 hover:shadow-lg transition-shadow flex flex-col justify-between">
               <CardContent className="p-8">
                 <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center mb-6">
                   <Heart className="text-white text-xl" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Community Donations</h3>
                 <p className="text-gray-600 mb-4">Flag surplus crops for donation and help support local communities in need. Track your social impact.</p>
-                <ul className="space-y-2 text-sm text-gray-600">
+                <ul className="space-y-2 text-sm text-gray-600 mb-6">
                   <li className="flex items-center">
                     <div className="w-2 h-2 bg-purple-600 rounded-full mr-2"></div>
                     Easy donation flagging
@@ -152,6 +204,14 @@ export default function LandingPage() {
                     Impact tracking
                   </li>
                 </ul>
+                <Link href="/donation-panel">
+                  <Button 
+                    variant="ghost" 
+                    className="text-purple-600 hover:text-purple-700 p-0 font-medium flex items-center"
+                  >
+                    View Community Impact <ArrowRight className="ml-1.5 h-4 w-4" />
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </div>
@@ -164,14 +224,19 @@ export default function LandingPage() {
           <h2 className="text-4xl font-bold text-white mb-6">Ready to Join the Rooted Community?</h2>
           <p className="text-xl text-rooted-accent mb-8">Connect with local farmers, access fresh produce, and support sustainable agriculture in your area.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-white text-rooted-primary hover:bg-gray-100 font-semibold text-lg shadow-lg">
+            <Button 
+              size="lg" 
+              onClick={() => handleOpenAuth('farmer')}
+              className="bg-white text-rooted-primary hover:bg-gray-100 font-semibold text-lg shadow-lg cursor-pointer"
+            >
               <Tractor className="mr-3 h-5 w-5" />
               Register as Farmer
             </Button>
             <Button 
               size="lg" 
               variant="outline" 
-              className="border-2 border-white text-white hover:bg-white hover:text-rooted-primary font-semibold text-lg"
+              onClick={() => handleOpenAuth('buyer')}
+              className="border-2 border-white text-white hover:bg-white hover:text-rooted-primary font-semibold text-lg cursor-pointer"
             >
               <ShoppingBasket className="mr-3 h-5 w-5" />
               Register as Buyer
@@ -198,35 +263,73 @@ export default function LandingPage() {
               </div>
               <p className="text-gray-400 mb-6 max-w-md">
                 Building sustainable connections between farmers, buyers, and communities. 
-                Together, we're creating a more resilient agricultural future.
+                Together, we're creating a more resilient agricultural future across South Africa.
               </p>
             </div>
             
             <div>
               <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
               <ul className="space-y-2">
-                <li><a href="#about" className="text-gray-400 hover:text-white transition-colors">About</a></li>
-                <li><a href="#features" className="text-gray-400 hover:text-white transition-colors">Features</a></li>
-                <li><a href="#contact" className="text-gray-400 hover:text-white transition-colors">Contact</a></li>
+                <li><Link href="/" className="text-gray-400 hover:text-white transition-colors">Home</Link></li>
+                <li><Link href="/buyer-marketplace" className="text-gray-400 hover:text-white transition-colors">Marketplace</Link></li>
+                <li><Link href="/donation-panel" className="text-gray-400 hover:text-white transition-colors">Community Donations</Link></li>
               </ul>
             </div>
 
             <div>
               <h4 className="text-lg font-semibold mb-4">Support</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Help Center</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
+                <li>
+                  <button 
+                    type="button"
+                    onClick={() => handleOpenSupport("help")} 
+                    className="text-gray-400 hover:text-white transition-colors text-left"
+                  >
+                    Help Center
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    type="button"
+                    onClick={() => handleOpenSupport("privacy")} 
+                    className="text-gray-400 hover:text-white transition-colors text-left"
+                  >
+                    Privacy Policy (POPIA)
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    type="button"
+                    onClick={() => handleOpenSupport("terms")} 
+                    className="text-gray-400 hover:text-white transition-colors text-left"
+                  >
+                    Terms of Service
+                  </button>
+                </li>
               </ul>
             </div>
           </div>
 
           <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400">&copy; 2024 Rooted. All rights reserved.</p>
+            <p className="text-gray-400">&copy; 2026 Rooted. All rights reserved.</p>
             <p className="text-gray-400 mt-4 md:mt-0">Made with <Heart className="inline h-4 w-4 text-red-500" /> for sustainable agriculture</p>
           </div>
         </div>
       </footer>
+
+      {/* Login / Register Modal */}
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onClose={() => setShowLoginModal(false)} 
+        userType={loginType} 
+      />
+
+      {/* Help, Privacy Policy & Terms Modal */}
+      <LegalSupportModal
+        isOpen={supportModalOpen}
+        onClose={() => setSupportModalOpen(false)}
+        initialTab={supportTab}
+      />
     </div>
   );
 }

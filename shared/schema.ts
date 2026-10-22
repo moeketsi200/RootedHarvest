@@ -1,37 +1,39 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, decimal, boolean, timestamp } from "drizzle-orm/pg-core";
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const users = sqliteTable("users", {
+  id: text("id").primaryKey(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
   name: text("name").notNull(),
   userType: text("user_type").notNull(), // 'farmer' | 'buyer'
   location: text("location"),
-  createdAt: timestamp("created_at").default(sql`now()`),
+  emailVerified: integer("email_verified", { mode: "boolean" }).default(false),
+  verificationCode: text("verification_code"),
+  createdAt: text("created_at").default(sql`(datetime('now'))`),
 });
 
-export const crops = pgTable("crops", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  farmerId: varchar("farmer_id").notNull().references(() => users.id),
+export const crops = sqliteTable("crops", {
+  id: text("id").primaryKey(),
+  farmerId: text("farmer_id").notNull().references(() => users.id),
   cropName: text("crop_name").notNull(),
   quantity: integer("quantity").notNull(),
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
-  harvestDate: timestamp("harvest_date").notNull(),
-  donationFlag: boolean("donation_flag").default(false),
+  price: text("price").notNull(),
+  harvestDate: text("harvest_date").notNull(),
+  donationFlag: integer("donation_flag", { mode: "boolean" }).default(false),
   status: text("status").default('available'), // 'available' | 'sold' | 'donated'
-  createdAt: timestamp("created_at").default(sql`now()`),
+  createdAt: text("created_at").default(sql`(datetime('now'))`),
 });
 
-export const donations = pgTable("donations", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  cropId: varchar("crop_id").notNull().references(() => crops.id),
+export const donations = sqliteTable("donations", {
+  id: text("id").primaryKey(),
+  cropId: text("crop_id").notNull().references(() => crops.id),
   communityName: text("community_name").notNull(),
   status: text("status").default('pending'), // 'pending' | 'accepted' | 'declined' | 'completed'
-  requestedAt: timestamp("requested_at").default(sql`now()`),
-  updatedAt: timestamp("updated_at").default(sql`now()`),
+  requestedAt: text("requested_at").default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").default(sql`(datetime('now'))`),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({

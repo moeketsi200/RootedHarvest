@@ -95,22 +95,22 @@ export default function AddCropForm({ farmerId }: AddCropFormProps) {
           
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="quantity">Quantity (lbs)</Label>
+              <Label htmlFor="quantity">Quantity (kg)</Label>
               <Input
                 id="quantity"
                 type="number"
-                placeholder="500"
+                placeholder="250"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
                 className="focus:ring-2 focus:ring-rooted-primary focus:border-transparent"
               />
             </div>
             <div>
-              <Label htmlFor="price">Price per lb</Label>
+              <Label htmlFor="price">Price per kg (R)</Label>
               <Input
                 id="price"
                 type="number"
-                placeholder="3.50"
+                placeholder="25.00"
                 step="0.01"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}

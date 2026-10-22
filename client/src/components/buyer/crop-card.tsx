@@ -74,15 +74,15 @@ export default function CropCard({ crop }: CropCardProps) {
           </p>
           <p className="text-gray-600 text-sm flex items-center">
             <Weight className="mr-2 h-4 w-4" />
-            {crop.quantity} lbs available
+            {crop.quantity} kg available
           </p>
         </div>
         
         <div className="flex items-center justify-between">
           <div>
             <p className="text-2xl font-bold text-rooted-primary">
-              ${crop.price}
-              <span className="text-sm font-normal text-gray-600">/lb</span>
+              R{crop.price}
+              <span className="text-sm font-normal text-gray-600">/kg</span>
             </p>
           </div>
           <Button 

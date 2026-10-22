@@ -9,6 +9,7 @@ import LandingPage from "@/pages/landing";
 import FarmerDashboard from "@/pages/farmer-dashboard";
 import BuyerMarketplace from "@/pages/buyer-marketplace";
 import DonationPanel from "@/pages/donation-panel";
+import VerifyEmailPage from "@/pages/verify-email";
 
 function Router() {
   return (
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/farmer-dashboard" component={FarmerDashboard} />
       <Route path="/buyer-marketplace" component={BuyerMarketplace} />
       <Route path="/donation-panel" component={DonationPanel} />
+      <Route path="/verify-email" component={VerifyEmailPage} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -37,25 +37,25 @@ export default function PlatformStats() {
         donationsPounds: 15673,
         monthlyRevenue: 89400,
         topRegions: [
-          { name: "California Central Valley", count: 89 },
-          { name: "Oregon Wine Country", count: 67 },
-          { name: "Washington State", count: 45 },
-          { name: "Arizona Desert", count: 32 }
+          { name: "Western Cape Winelands", count: 89 },
+          { name: "Limpopo Subtropical Valleys", count: 67 },
+          { name: "Free State Grain Belt", count: 45 },
+          { name: "KwaZulu-Natal Midlands", count: 32 }
         ],
         recentActivity: [
           {
             type: "farmer_joined",
-            message: "Green Valley Organics joined the platform",
+            message: "Stellenbosch Organics joined the platform",
             timestamp: new Date(Date.now() - 2 * 60 * 1000)
           },
           {
             type: "transaction",
-            message: "500 lbs of tomatoes sold to Fresh Market Co",
+            message: "500 kg of sweet potatoes sold to Cape Fresh Market",
             timestamp: new Date(Date.now() - 15 * 60 * 1000)
           },
           {
             type: "donation",
-            message: "200 lbs of mixed vegetables donated to Community Kitchen",
+            message: "200 kg of fresh vegetables donated to Gift of the Givers Kitchen",
             timestamp: new Date(Date.now() - 45 * 60 * 1000)
           },
           {
@@ -166,7 +166,7 @@ export default function PlatformStats() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-3xl font-bold text-purple-600">${(stats.monthlyRevenue / 1000).toFixed(0)}k</p>
+                <p className="text-3xl font-bold text-purple-600">R{(stats.monthlyRevenue / 1000).toFixed(0)}k</p>
                 <p className="text-gray-600 text-sm">Monthly Revenue</p>
               </div>
               <DollarSign className="text-purple-600 text-2xl" />
@@ -208,7 +208,7 @@ export default function PlatformStats() {
                 </div>
               </div>
               <Badge variant="secondary" className="text-lg font-bold">
-                {stats.donationsPounds.toLocaleString()} lbs
+                {stats.donationsPounds.toLocaleString()} kg
               </Badge>
             </div>
           </CardContent>
