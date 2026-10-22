@@ -244,11 +244,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Crop routes
   app.post("/api/crops", async (req, res) => {
     try {
-      const cropData = insertCropSchema.parse(req.body);
+      const incoming = {
+        ...req.body,
+        farmerId: req.body.farmerId || req.session?.userId,
+      };
+
+      if (!incoming.farmerId) {
+        return res.status(401).json({ message: "Farmer authentication required" });
+      }
+
+      const cropData = insertCropSchema.parse(incoming);
       const crop = await storage.createCrop(cropData);
       res.status(201).json(crop);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid crop data" });
+    } catch (error: any) {
+      console.error("Add crop error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: error.errors[0]?.message || "Invalid crop data", 
+          details: error.errors 
+        });
+      }
+      res.status(400).json({ message: error.message || "Invalid crop data" });
     }
   });
 

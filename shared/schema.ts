@@ -41,10 +41,15 @@ export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
 });
 
-export const insertCropSchema = createInsertSchema(crops).omit({
-  id: true,
-  createdAt: true,
-});
+export const insertCropSchema = createInsertSchema(crops)
+  .omit({
+    id: true,
+    createdAt: true,
+  })
+  .extend({
+    price: z.union([z.string(), z.number()]).transform((val) => String(val)),
+    quantity: z.union([z.string(), z.number()]).transform((val) => Number(val)),
+  });
 
 export const insertDonationSchema = createInsertSchema(donations).omit({
   id: true,

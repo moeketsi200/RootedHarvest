@@ -7,12 +7,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/contexts/auth-context";
 
 interface AddCropFormProps {
   farmerId: string;
 }
 
 export default function AddCropForm({ farmerId }: AddCropFormProps) {
+  const { currentUser, userProfile } = useAuth();
   const [cropName, setCropName] = useState("");
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
@@ -22,6 +24,8 @@ export default function AddCropForm({ farmerId }: AddCropFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const activeFarmerId = farmerId || userProfile?.id || currentUser?.id;
+
   const addCropMutation = useMutation({
     mutationFn: async (cropData: any) => {
       const response = await apiRequest("POST", "/api/crops", cropData);
@@ -29,7 +33,7 @@ export default function AddCropForm({ farmerId }: AddCropFormProps) {
     },
     onSuccess: () => {
       toast({
-        title: "Crop added successfully!",
+        title: "Crop added successfully! 🌽",
         description: "Your crop has been added to your inventory.",
       });
       
@@ -41,12 +45,22 @@ export default function AddCropForm({ farmerId }: AddCropFormProps) {
       setDonationFlag(false);
       
       // Invalidate crops query to refetch
-      queryClient.invalidateQueries({ queryKey: ["/api/crops", farmerId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/crops", activeFarmerId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/crops/marketplace"] });
     },
-    onError: () => {
+    onError: (err: any) => {
+      let errorMessage = "Please check your inputs and try again.";
+      if (err?.message) {
+        try {
+          const parsed = JSON.parse(err.message.replace(/^\d+:\s*/, ""));
+          errorMessage = parsed.message || err.message;
+        } catch {
+          errorMessage = err.message;
+        }
+      }
       toast({
         title: "Error adding crop",
-        description: "Please try again later.",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -64,11 +78,20 @@ export default function AddCropForm({ farmerId }: AddCropFormProps) {
       return;
     }
 
+    if (!activeFarmerId) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to add crops to your inventory.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     addCropMutation.mutate({
-      farmerId,
-      cropName,
-      quantity: parseInt(quantity),
-      price: parseFloat(price),
+      farmerId: activeFarmerId,
+      cropName: cropName.trim(),
+      quantity: Number(quantity),
+      price: String(price).trim(),
       harvestDate: new Date(harvestDate).toISOString(),
       donationFlag,
     });
